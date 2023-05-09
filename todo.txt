@@ -1,0 +1,4 @@
+Convert About/Contact to backend managed
+Add dynamic pagination
+Add password update w/ email confirmation
+Add email update

@@ -49,9 +49,10 @@ class PortfolioItem(db.Model):
         self.description = description
         self.date = date
 
+
 class PortfolioSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'title', 'category', 'projectURL', 'repoURL', 'imgURL', 'description', 'date')
+        fields = ('id', 'title', 'category', 'projectURL', 'repoURL', 'imgURL', 'description', 'date', 'perPage')
 
 portfolio_schema = PortfolioSchema()
 all_portfolio_schema = PortfolioSchema(many=True)
@@ -88,7 +89,7 @@ def verification():
         return jsonify("Error improper validation content type")
     
     data = request.get_json()
-    username = data.get("email")
+    email = data.get("email")
     password = data.get("password")
 
     user = db.session.query(User).filter(User.email == email).first()
@@ -104,7 +105,6 @@ def verification():
     
     return jsonify("Welcome Administrator Coble")
 
-@app.route()
 @app.route('/portfolio/get', methods=["GET"])
 def get_portfolio_items():
     portfolioItems = db.session.query(PortfolioItem).all()
@@ -114,6 +114,26 @@ def get_portfolio_items():
 def get_portfolio_item(id):
     portfolioItem = db.session.query(PortfolioItem).filter_by(id=id).first()
     return jsonify(portfolio_schema.dump(portfolioItem))
+
+@app.route("/portfolio/add", method=["POST"])
+def add_portfolio_item():
+    if request.content_type != 'application/json':
+        return jsonify('Error: Data must be sent as JSON')
+
+    data = request.get_json()
+    title = data.get('title')
+    category = data.get('category')
+    projectURL = data.get('projectURL')
+    repoURL = data.get('repoURL')
+    imgURL = data.get('imgURL')
+    description = data.get('description')
+    date = data.get('date')
+
+    new_portfolio_item = PortfolioItem(title, category, projectURL, repoURL, imgURL, description, date)
+    db.session.add(new_portfolio_item)
+    db.session.commit()
+
+    return jsonify(portfolio_schema.dump(new_portfolio_item))
 
 @app.route('/portfolio/update/<id>', methods=["PUT"])
 def update_portfolio_item(id):
@@ -165,6 +185,23 @@ def get_all_blog_items():
 def get_blog_item(id):
     blogItem = db.session.query(BlogItem).filter(BlogItem.id == id).first()
     return jsonify(blog_schema.dump(blogItem))
+@app.route('/blog/add')
+def add_blog_item():
+    if not request.is_json:
+        return jsonify("Request body is not JSON")
+    
+    data = request.get_json()
+    title = data.get('title')
+    date = data.get('date')
+    content = data.get('content')
+    flavorImgURL = data.get('flavorImg')
+    refURL = data.get('refURL')
+
+    new_blog_item = BlogItem(title, date, content, flavorImgURL, refURL)
+    db.session.add(new_blog_item)
+    db.session.commit()
+
+    return jsonify(blog_schema.dump(new_blog_item))
 
 @app.route('/blog/update/<id>', methods = ["PUT"])
 def update_blog_item(id):
